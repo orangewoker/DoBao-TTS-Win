@@ -51,6 +51,18 @@ jobs:
             type=semver,pattern={{major}}
             type=sha,prefix=
 
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64/v8
+
       - name: Set Package Visibility to Public
         uses: actions/github-script@v7
         if: github.event_name != 'pull_request'
@@ -67,25 +79,6 @@ jobs:
             } catch (error) {
               console.log('Package visibility setting:', error.message);
             }
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64/v8
-
-      - name: Generate SBOM
-        if: github.event_name != 'pull_request'
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-sbom
-        env:
-          ENABLED: false
 
       - name: Image digest
         run: echo "Digest = ${{ steps.build.outputs.digest }}"
