@@ -6,8 +6,7 @@ RUN apk add --no-cache python3 make g++
 
 COPY app/package*.json ./
 
-RUN npm ci --only=production && \
-    npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 FROM node:18-alpine
 
